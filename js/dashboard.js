@@ -4,6 +4,14 @@ let currentFilters = {};
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced initialization
+    initializeDashboard();
+    setupEnhancedFeatures();
+    startAutoRefresh();
+});
+
+// Enhanced initialization function
+function initializeDashboard() {
     // Set default date range (last 30 days)
     const today = new Date();
     const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
@@ -13,26 +21,238 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load initial history data
     loadHistoryData();
-    
-    // Auto-refresh recent results every 30 seconds
-    setInterval(refreshRecentResults, 30000);
-});
+}
 
-// Show/hide sections based on tab selection
+// Setup enhanced UI features
+function setupEnhancedFeatures() {
+    // Add fade-in animation to elements as they appear
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+            }
+        });
+    }, observerOptions);
+
+    // Observe all content sections
+    document.querySelectorAll('.content-section, .table-container, .filters').forEach(el => {
+        observer.observe(el);
+    });
+
+    // Add pulse animation to important stats
+    const criticalStats = document.querySelectorAll('.stat-card.danger .stat-value');
+    criticalStats.forEach(stat => {
+        if (parseInt(stat.textContent) > 0) {
+            stat.classList.add('pulse');
+        }
+    });
+
+    // Enhanced button hover effects
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        btn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+
+    // Enhanced status badge animations
+    document.querySelectorAll('.status-badge').forEach(badge => {
+        badge.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.05)';
+        });
+        
+        badge.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+
+    // Progressive enhancement for tables
+    document.querySelectorAll('.table tbody tr').forEach(row => {
+        row.addEventListener('click', function() {
+            // Add subtle highlight effect
+            this.style.backgroundColor = 'rgba(102, 126, 234, 0.05)';
+            setTimeout(() => {
+                this.style.backgroundColor = '';
+            }, 300);
+        });
+    });
+
+    // Setup keyboard shortcuts
+    setupKeyboardShortcuts();
+    
+    // Initialize sortable tables
+    initializeSortableTables();
+}
+
+// Initialize sortable tables
+function initializeSortableTables() {
+    document.querySelectorAll('.sortable-table').forEach(table => {
+        const headers = table.querySelectorAll('th.sortable');
+        
+        headers.forEach(header => {
+            header.addEventListener('click', function() {
+                sortTable(table, this);
+            });
+        });
+    });
+}
+
+// Sort table by column
+function sortTable(table, header) {
+    const column = header.dataset.column;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    // Determine sort direction
+    let direction = 'asc';
+    if (header.classList.contains('sort-asc')) {
+        direction = 'desc';
+    }
+    
+    // Clear all sort classes
+    table.querySelectorAll('th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+    });
+    
+    // Add sort class to current header
+    header.classList.add(`sort-${direction}`);
+    
+    // Get column index
+    const columnIndex = Array.from(header.parentNode.children).indexOf(header);
+    
+    // Sort rows
+    rows.sort((a, b) => {
+        const aCell = a.cells[columnIndex];
+        const bCell = b.cells[columnIndex];
+        
+        let aValue = getCellValue(aCell, column);
+        let bValue = getCellValue(bCell, column);
+        
+        // Handle different data types
+        if (isNumeric(aValue) && isNumeric(bValue)) {
+            aValue = parseFloat(aValue);
+            bValue = parseFloat(bValue);
+        } else if (isDate(aValue) && isDate(bValue)) {
+            aValue = new Date(aValue).getTime();
+            bValue = new Date(bValue).getTime();
+        } else {
+            aValue = aValue.toLowerCase();
+            bValue = bValue.toLowerCase();
+        }
+        
+        if (direction === 'asc') {
+            return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        } else {
+            return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+        }
+    });
+    
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+    
+    // Add visual feedback
+    rows.forEach((row, index) => {
+        row.style.animationDelay = `${index * 0.01}s`;
+        row.classList.add('fade-in');
+    });
+}
+
+// Get cell value for sorting
+function getCellValue(cell, column) {
+    // Handle status badges
+    const statusBadge = cell.querySelector('.status-badge');
+    if (statusBadge) {
+        return statusBadge.textContent.trim();
+    }
+    
+    // Handle execution time (remove 's' suffix)
+    if (column === 'execution_time') {
+        const text = cell.textContent.trim();
+        return text.replace('s', '');
+    }
+    
+    // Handle success rate (remove '%' suffix)
+    if (column === 'success_rate') {
+        const text = cell.textContent.trim();
+        return text.replace('%', '');
+    }
+    
+    return cell.textContent.trim();
+}
+
+// Check if value is numeric
+function isNumeric(value) {
+    return !isNaN(parseFloat(value)) && isFinite(value);
+}
+
+// Check if value is a date
+function isDate(value) {
+    return !isNaN(Date.parse(value));
+}
+
+// Enhanced keyboard shortcuts
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', function(event) {
+        // ESC to close modals
+        if (event.key === 'Escape') {
+            document.querySelectorAll('.modal').forEach(modal => {
+                if (modal.style.display === 'flex') {
+                    modal.style.opacity = '0';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                    }, 300);
+                }
+            });
+        }
+        
+        // Number keys to switch tabs
+        if (event.key >= '1' && event.key <= '3') {
+            const tabs = ['overview', 'scripts', 'history'];
+            const tabIndex = parseInt(event.key) - 1;
+            if (tabs[tabIndex]) {
+                const tabButton = document.querySelector(`[onclick="showSection('${tabs[tabIndex]}')"]`);
+                if (tabButton) {
+                    tabButton.click();
+                }
+            }
+        }
+    });
+}
+
+// Enhanced tab switching with animations
 function showSection(sectionName) {
-    // Hide all sections
-    const sections = document.querySelectorAll('.content-section');
-    sections.forEach(section => section.classList.remove('active'));
+    // Remove active class from all tabs and sections
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
     
-    // Remove active class from all tabs
-    const tabs = document.querySelectorAll('.nav-tab');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    
-    // Show selected section
-    document.getElementById(sectionName).classList.add('active');
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+    });
     
     // Add active class to clicked tab
     event.target.classList.add('active');
+    
+    // Show the corresponding section with animation
+    const targetSection = document.getElementById(sectionName);
+    if (targetSection) {
+        setTimeout(() => {
+            targetSection.classList.add('active');
+            targetSection.style.opacity = '1';
+            targetSection.style.transform = 'translateY(0)';
+            targetSection.style.transition = 'all 0.3s ease';
+        }, 50);
+    }
     
     // Load data for history section if selected
     if (sectionName === 'history') {
@@ -40,10 +260,49 @@ function showSection(sectionName) {
     }
 }
 
-// Refresh recent results data
+// Enhanced refresh function with better feedback
 function refreshData() {
-    refreshRecentResults();
-    refreshStatistics();
+    const refreshBtn = document.querySelector('[onclick="refreshData()"]');
+    const originalText = refreshBtn.innerHTML;
+    
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+    refreshBtn.disabled = true;
+    
+    Promise.all([
+        refreshRecentResults(),
+        refreshStatistics()
+    ]).then(() => {
+        refreshBtn.innerHTML = originalText;
+        refreshBtn.disabled = false;
+        
+        // Show success feedback
+        showSuccessMessage('Data refreshed successfully!');
+    }).catch(error => {
+        refreshBtn.innerHTML = originalText;
+        refreshBtn.disabled = false;
+        console.error('Refresh error:', error);
+    });
+}
+
+// Show success message
+function showSuccessMessage(message) {
+    const tempSuccess = document.createElement('div');
+    tempSuccess.innerHTML = `<i class="fas fa-check"></i> ${message}`;
+    tempSuccess.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1001;
+        background: var(--success-color); color: white;
+        padding: 1rem 1.5rem; border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg); opacity: 0;
+        transition: opacity 0.3s ease; pointer-events: none;
+        font-weight: 500;
+    `;
+    
+    document.body.appendChild(tempSuccess);
+    setTimeout(() => tempSuccess.style.opacity = '1', 10);
+    setTimeout(() => {
+        tempSuccess.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(tempSuccess), 300);
+    }, 3000);
 }
 
 // Refresh recent results only
@@ -81,6 +340,7 @@ function updateRecentResults(results) {
     if (results.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
+                <i class="fas fa-inbox"></i>
                 <h3>No script results yet</h3>
                 <p>Scripts will appear here once they start reporting their status.</p>
             </div>
@@ -89,33 +349,59 @@ function updateRecentResults(results) {
     }
     
     let html = `
-        <table class="table">
+        <table class="table sortable-table">
             <thead>
                 <tr>
-                    <th>Script Name</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Message</th>
-                    <th>Execution Time</th>
-                    <th>Reported At</th>
+                    <th class="sortable" data-column="script_name">
+                        <i class="fas fa-file-alt"></i> Script Name
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="script_type">
+                        <i class="fas fa-tag"></i> Type
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="status">
+                        <i class="fas fa-traffic-light"></i> Status
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="message">
+                        <i class="fas fa-comment"></i> Message
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="execution_time">
+                        <i class="fas fa-stopwatch"></i> Execution Time
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="reported_at">
+                        <i class="fas fa-clock"></i> Reported At
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
                 </tr>
             </thead>
             <tbody>
     `;
     
     results.forEach(result => {
+        const statusIcons = {
+            'success': 'fas fa-check',
+            'failure': 'fas fa-times', 
+            'warning': 'fas fa-exclamation',
+            'info': 'fas fa-info'
+        };
+        
         html += `
             <tr>
                 <td>${escapeHtml(result.script_name)}</td>
                 <td>${escapeHtml(result.script_type)}</td>
                 <td>
                     <span class="status-badge ${result.status}">
+                        <i class="${statusIcons[result.status] || 'fas fa-question'}"></i>
                         ${escapeHtml(result.status)}
                     </span>
                 </td>
                 <td>
                     ${escapeHtml(result.message)}
-                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" data-detailed-message="${escapeHtml(result.detailed_message)}" onclick="showDetailedMessageFromButton(this)">View Details</button>` : ''}
+                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" data-detailed-message="${escapeHtml(result.detailed_message)}" onclick="showDetailedMessageFromButton(this)"><i class="fas fa-eye"></i> View Details</button>` : ''}
                 </td>
                 <td>${formatExecutionTime(result.execution_time)}</td>
                 <td>${formatDate(result.reported_at)}</td>
@@ -125,13 +411,16 @@ function updateRecentResults(results) {
     
     html += '</tbody></table>';
     container.innerHTML = html;
+    
+    // Re-initialize sorting for the new table
+    initializeSortableTables();
 }
 
 // Update statistics cards
 function updateStatistics(stats) {
     const cards = document.querySelectorAll('.stat-card .stat-value');
     if (cards.length >= 4) {
-        cards[0].textContent = stats.total_scripts;
+        cards[0].textContent = stats.scripts_run_today || stats.total_scripts; // fallback for compatibility
         cards[1].textContent = stats.total_executions;
         cards[2].textContent = stats.success_rate + '%';
         cards[3].textContent = stats.failed_executions;
@@ -361,14 +650,27 @@ function closeDetailModal() {
     modal.style.display = 'none';
 }
 
-// API Instructions Modal functions
+// Enhanced modal functions with better animations
 function showApiInstructions() {
     const modal = document.getElementById('apiModal');
-    const instructionsContainer = document.getElementById('apiInstructions');
-    
-    // Show loading
-    instructionsContainer.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading API instructions...</p></div>';
     modal.style.display = 'flex';
+    modal.style.opacity = '0';
+    
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        modal.style.transition = 'opacity 0.3s ease';
+    }, 10);
+    
+    // Load API instructions with better loading state
+    const instructionsDiv = document.getElementById('apiInstructions');
+    instructionsDiv.innerHTML = `
+        <div class="loading" style="text-align: center; padding: 2rem;">
+            <div class="spinner"></div>
+            <p style="margin-top: 1rem; color: var(--medium-gray);">
+                <i class="fas fa-code"></i> Loading API documentation...
+            </p>
+        </div>
+    `;
     
     // Fetch README content with cache-busting
     const cacheBuster = new Date().getTime();
@@ -390,22 +692,48 @@ function showApiInstructions() {
                 console.log('Content preview:', data.preview);
                 // Convert markdown to HTML (simple conversion)
                 const htmlContent = convertMarkdownToHtml(data.content);
-                instructionsContainer.innerHTML = htmlContent;
+                instructionsDiv.innerHTML = htmlContent;
             } else {
                 console.error('Error loading README:', data.error);
                 console.error('Attempted path:', data.attempted_path);
-                instructionsContainer.innerHTML = '<div class="error">Error loading API instructions: ' + data.error + '</div>';
+                instructionsDiv.innerHTML = '<div class="error">Error loading API instructions: ' + data.error + '</div>';
             }
         })
         .catch(error => {
             console.error('Error loading API instructions:', error);
-            instructionsContainer.innerHTML = '<div class="error">Error loading API instructions. Please try again.</div>';
+            instructionsDiv.innerHTML = '<div class="error">Error loading API instructions. Please try again.</div>';
         });
 }
 
 function closeApiModal() {
     const modal = document.getElementById('apiModal');
-    modal.style.display = 'none';
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+}
+
+function showDetailedMessageFromButton(button) {
+    const message = button.getAttribute('data-detailed-message');
+    const modal = document.getElementById('detailModal');
+    const detailText = document.getElementById('detailText');
+    
+    detailText.textContent = message;
+    modal.style.display = 'flex';
+    modal.style.opacity = '0';
+    
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        modal.style.transition = 'opacity 0.3s ease';
+    }, 10);
+}
+
+function closeDetailModal() {
+    const modal = document.getElementById('detailModal');
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
 }
 
 // Simple markdown to HTML converter
@@ -524,19 +852,24 @@ function convertSingleTable(lines) {
     return hasValidRows ? html : lines.join('\n');
 }
 
-// Close modal when clicking outside of it
-window.onclick = function(event) {
-    const detailModal = document.getElementById('detailModal');
-    const apiModal = document.getElementById('apiModal');
-    
-    if (event.target === detailModal) {
-        closeDetailModal();
-    }
-    
-    if (event.target === apiModal) {
-        closeApiModal();
-    }
-}
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    });
+});
 
-// Start auto-refresh when page loads
-document.addEventListener('DOMContentLoaded', startAutoRefresh);
+// Auto-refresh functionality with enhanced features
+function startAutoRefresh() {
+    setInterval(() => {
+        if (document.querySelector('#overview.active')) {
+            refreshRecentResults().catch(console.error);
+        }
+    }, 30000); // Refresh every 30 seconds
+}

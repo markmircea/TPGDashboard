@@ -4,7 +4,6 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-
 // Check if user is logged in
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['username'])) {
     header('Location: index.php');
@@ -37,70 +36,157 @@ $allScripts = getAllScripts();
     <title><?php echo APP_NAME; ?> - Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="dashboard-page">
     <header class="header">
         <div class="header-content">
-            <h1><?php echo APP_NAME; ?></h1>
+            <h1>
+                <i class="fas fa-tachometer-alt"></i>
+                <?php echo APP_NAME; ?>
+            </h1>
             <div class="user-info">
-                <button class="btn btn-info btn-sm" onclick="showApiInstructions()">API Instructions</button>
-                <span>Welcome, <?php echo escape($_SESSION['username']); ?></span>
-                <a href="?logout" class="btn btn-secondary btn-sm">Logout</a>
+                <button class="btn btn-info btn-sm" onclick="showApiInstructions()">
+                    <i class="fas fa-code"></i>
+                    API Instructions
+                </button>
+                <span>
+                    <i class="fas fa-user"></i>
+                    Welcome, <?php echo escape($_SESSION['username']); ?>
+                </span>
+                <a href="?logout" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
             </div>
         </div>
     </header>
 
     <main class="main-content">
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
+        <!-- Enhanced Statistics Cards -->
+        <div class="stats-grid fade-in">
             <div class="stat-card primary">
-                <h3>Total Scripts</h3>
-                <div class="stat-value"><?php echo $stats['total_scripts']; ?></div>
+                <div class="stat-card-header">
+                    <h3>Scripts Run Today</h3>
+                    <div class="stat-card-icon">
+                        <i class="fas fa-file-code"></i>
+                    </div>
+                </div>
+                <div class="stat-value"><?php echo $stats['scripts_run_today']; ?></div>
+                <div class="stat-trend">
+                    <i class="fas fa-calendar-day"></i>
+                    Unique scripts executed
+                </div>
             </div>
+            
             <div class="stat-card info">
-                <h3>Total Executions - Today</h3>
+                <div class="stat-card-header">
+                    <h3>Executions Today</h3>
+                    <div class="stat-card-icon">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                </div>
                 <div class="stat-value"><?php echo $stats['total_executions']; ?></div>
+                <div class="stat-trend">
+                    <i class="fas fa-calendar-day"></i>
+                    Since midnight
+                </div>
             </div>
+            
             <div class="stat-card success">
-                <h3>Success Rate - Today</h3>
+                <div class="stat-card-header">
+                    <h3>Success Rate</h3>
+                    <div class="stat-card-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
                 <div class="stat-value"><?php echo $stats['success_rate']; ?>%</div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                    Today's performance
+                </div>
             </div>
+            
             <div class="stat-card danger">
-                <h3>Failed Executions - Today</h3>
+                <div class="stat-card-header">
+                    <h3>Failed Executions</h3>
+                    <div class="stat-card-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
                 <div class="stat-value"><?php echo $stats['failed_executions']; ?></div>
+                <div class="stat-trend">
+                    <i class="fas fa-calendar-day"></i>
+                    Needs attention
+                </div>
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showSection('overview')">Overview</button>
-            <button class="nav-tab" onclick="showSection('scripts')">Scripts</button>
-            <button class="nav-tab" onclick="showSection('history')">History</button>
+        <!-- Enhanced Navigation Tabs -->
+        <div class="nav-tabs fade-in">
+            <button class="nav-tab active" onclick="showSection('overview')">
+                <i class="fas fa-chart-pie"></i>
+                Overview
+            </button>
+            <button class="nav-tab" onclick="showSection('scripts')">
+                <i class="fas fa-cogs"></i>
+                Scripts
+            </button>
+            <button class="nav-tab" onclick="showSection('history')">
+                <i class="fas fa-history"></i>
+                History
+            </button>
         </div>
 
         <!-- Overview Section -->
-        <div id="overview" class="content-section active">
+        <div id="overview" class="content-section active fade-in">
             <div class="table-container">
                 <div class="table-header">
-                    <h2>Recent Activity</h2>
-                    <button class="btn btn-primary btn-sm" onclick="refreshData()">Refresh</button>
+                    <h2>
+                        <i class="fas fa-activity"></i>
+                        Recent Activity
+                    </h2>
+                    <button class="btn btn-primary btn-sm" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
                 </div>
                 <div id="recent-results">
                     <?php if (empty($recentResults)): ?>
                         <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
                             <h3>No script results yet</h3>
                             <p>Scripts will appear here once they start reporting their status.</p>
                         </div>
                     <?php else: ?>
-                        <table class="table">
+                        <table class="table sortable-table">
                             <thead>
                                 <tr>
-                                    <th>Script Name</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Message</th>
-                                    <th>Execution Time</th>
-                                    <th>Reported At</th>
+                                    <th class="sortable" data-column="script_name">
+                                        <i class="fas fa-file-alt"></i> Script Name
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="sortable" data-column="script_type">
+                                        <i class="fas fa-tag"></i> Type
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="sortable" data-column="status">
+                                        <i class="fas fa-traffic-light"></i> Status
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="sortable" data-column="message">
+                                        <i class="fas fa-comment"></i> Message
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="sortable" data-column="execution_time">
+                                        <i class="fas fa-stopwatch"></i> Execution Time
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="sortable" data-column="reported_at">
+                                        <i class="fas fa-clock"></i> Reported At
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -110,13 +196,25 @@ $allScripts = getAllScripts();
                                         <td><?php echo escape($result['script_type']); ?></td>
                                         <td>
                                             <span class="status-badge <?php echo $result['status']; ?>">
+                                                <?php 
+                                                $statusIcons = [
+                                                    'success' => 'fas fa-check',
+                                                    'failure' => 'fas fa-times',
+                                                    'warning' => 'fas fa-exclamation',
+                                                    'info' => 'fas fa-info'
+                                                ];
+                                                ?>
+                                                <i class="<?php echo $statusIcons[$result['status']] ?? 'fas fa-question'; ?>"></i>
                                                 <?php echo escape($result['status']); ?>
                                             </span>
                                         </td>
                                         <td>
                                             <?php echo escape($result['message']); ?>
                                             <?php if (!empty($result['detailed_message'])): ?>
-                                                <br><button class="btn btn-sm btn-secondary" data-detailed-message="<?php echo htmlspecialchars($result['detailed_message'], ENT_QUOTES, 'UTF-8'); ?>" onclick="showDetailedMessageFromButton(this)">View Details</button>
+                                                <br><button class="btn btn-sm btn-secondary" data-detailed-message="<?php echo htmlspecialchars($result['detailed_message'], ENT_QUOTES, 'UTF-8'); ?>" onclick="showDetailedMessageFromButton(this)">
+                                                    <i class="fas fa-eye"></i>
+                                                    View Details
+                                                </button>
                                             <?php endif; ?>
                                         </td>
                                         <td><?php echo formatExecutionTime($result['execution_time']); ?></td>
@@ -134,24 +232,49 @@ $allScripts = getAllScripts();
         <div id="scripts" class="content-section">
             <div class="table-container">
                 <div class="table-header">
-                    <h2>All Scripts</h2>
+                    <h2>
+                        <i class="fas fa-list"></i>
+                        All Scripts
+                    </h2>
                 </div>
                 <?php if (empty($allScripts)): ?>
                     <div class="empty-state">
+                        <i class="fas fa-code"></i>
                         <h3>No scripts registered</h3>
                         <p>Scripts will be automatically registered when they first report their status.</p>
                     </div>
                 <?php else: ?>
-                    <table class="table">
+                    <table class="table sortable-table">
                         <thead>
                             <tr>
-                                <th>Script Name</th>
-                                <th>Type</th>
-                                <th>Total Executions</th>
-                                <th>Successful</th>
-                                <th>Success Rate</th>
-                                <th>Last Execution</th>
-                                <th>Created</th>
+                                <th class="sortable" data-column="script_name">
+                                    <i class="fas fa-file-alt"></i> Script Name
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="script_type">
+                                    <i class="fas fa-tag"></i> Type
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="total_executions">
+                                    <i class="fas fa-play"></i> Total Executions
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="successful_executions">
+                                    <i class="fas fa-check"></i> Successful
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="success_rate">
+                                    <i class="fas fa-percentage"></i> Success Rate
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="last_execution">
+                                    <i class="fas fa-clock"></i> Last Execution
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="created_at">
+                                    <i class="fas fa-calendar-plus"></i> Created
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -166,7 +289,12 @@ $allScripts = getAllScripts();
                                     <td><?php echo escape($script['script_type']); ?></td>
                                     <td><?php echo $script['total_executions']; ?></td>
                                     <td><?php echo $script['successful_executions']; ?></td>
-                                    <td><?php echo $successRate; ?>%</td>
+                                    <td>
+                                        <span class="status-badge <?php echo $successRate >= 90 ? 'success' : ($successRate >= 70 ? 'warning' : 'danger'); ?>">
+                                            <i class="fas fa-chart-line"></i>
+                                            <?php echo $successRate; ?>%
+                                        </span>
+                                    </td>
                                     <td><?php echo $script['last_execution'] ? formatDate($script['last_execution']) : 'Never'; ?></td>
                                     <td><?php echo formatDate($script['created_at']); ?></td>
                                 </tr>
@@ -180,18 +308,30 @@ $allScripts = getAllScripts();
         <!-- History Section -->
         <div id="history" class="content-section">
             <div class="filters">
-                <h3>Filter Results</h3>
+                <h3>
+                    <i class="fas fa-filter"></i>
+                    Filter Results
+                </h3>
                 <div class="filter-row">
                     <div class="filter-group">
-                        <label for="date-from">From Date</label>
+                        <label for="date-from">
+                            <i class="fas fa-calendar-alt"></i>
+                            From Date
+                        </label>
                         <input type="date" id="date-from" name="date-from">
                     </div>
                     <div class="filter-group">
-                        <label for="date-to">To Date</label>
+                        <label for="date-to">
+                            <i class="fas fa-calendar-alt"></i>
+                            To Date
+                        </label>
                         <input type="date" id="date-to" name="date-to">
                     </div>
                     <div class="filter-group">
-                        <label for="script-filter">Script</label>
+                        <label for="script-filter">
+                            <i class="fas fa-file-code"></i>
+                            Script
+                        </label>
                         <select id="script-filter" name="script-filter">
                             <option value="">All Scripts</option>
                             <?php foreach ($allScripts as $script): ?>
@@ -202,7 +342,10 @@ $allScripts = getAllScripts();
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label for="status-filter">Status</label>
+                        <label for="status-filter">
+                            <i class="fas fa-traffic-light"></i>
+                            Status
+                        </label>
                         <select id="status-filter" name="status-filter">
                             <option value="all">All</option>
                             <option value="success">Success</option>
@@ -213,15 +356,24 @@ $allScripts = getAllScripts();
                     </div>
                     <div class="filter-group">
                         <label>&nbsp;</label>
-                        <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-search"></i>
+                            Apply Filters
+                        </button>
                     </div>
                 </div>
             </div>
 
             <div class="table-container">
                 <div class="table-header">
-                    <h2>Historical Results</h2>
-                    <button class="btn btn-secondary btn-sm" onclick="exportResults()">Export CSV</button>
+                    <h2>
+                        <i class="fas fa-archive"></i>
+                        Historical Results
+                    </h2>
+                    <button class="btn btn-secondary btn-sm" onclick="exportResults()">
+                        <i class="fas fa-download"></i>
+                        Export CSV
+                    </button>
                 </div>
                 <div id="history-results">
                     <div class="loading">
@@ -235,11 +387,14 @@ $allScripts = getAllScripts();
     <br>
     <br>
 
-    <!-- Modal for detailed messages -->
+    <!-- Enhanced Modal for detailed messages -->
     <div id="detailModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Detailed Message</h3>
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    Detailed Message
+                </h3>
                 <span class="close" onclick="closeDetailModal()">&times;</span>
             </div>
             <div class="modal-body">
@@ -248,11 +403,14 @@ $allScripts = getAllScripts();
         </div>
     </div>
 
-    <!-- Modal for API Instructions -->
+    <!-- Enhanced Modal for API Instructions -->
     <div id="apiModal" class="modal" style="display: none;">
         <div class="modal-content modal-large">
             <div class="modal-header">
-                <h3>API Instructions</h3>
+                <h3>
+                    <i class="fas fa-code"></i>
+                    API Instructions
+                </h3>
                 <span class="close" onclick="closeApiModal()">&times;</span>
             </div>
             <div class="modal-body">
