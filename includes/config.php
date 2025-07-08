@@ -1,9 +1,9 @@
 <?php
 // Database configuration
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'tpg_dashboard');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_NAME', 'aibrainl_tpg');
+define('DB_USER', 'aibrainl_tpg');
+define('DB_PASS', 'She-wolf11!!');
 
 
 // Initialize session (only if not already started)
