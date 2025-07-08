@@ -8,7 +8,7 @@
 $apiUrl = 'http://localhost:8000/api/report.php'; // Adjust this URL as needed
 
 // Function to report script result to dashboard
-function reportToDashboard($scriptName, $scriptType, $status, $message, $executionTime = null, $description = '') {
+function reportToDashboard($scriptName, $scriptType, $status, $message, $executionTime = null, $description = '', $detailedMessage = '') {
     global $apiUrl;
     
     $data = [
@@ -17,7 +17,8 @@ function reportToDashboard($scriptName, $scriptType, $status, $message, $executi
         'status' => $status,
         'message' => $message,
         'execution_time' => $executionTime,
-        'description' => $description
+        'description' => $description,
+        'detailed_message' => $detailedMessage
     ];
     
     $options = [

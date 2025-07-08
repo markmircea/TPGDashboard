@@ -45,13 +45,29 @@ try {
     $pdo->exec("CREATE TABLE IF NOT EXISTS script_results (
         id INT AUTO_INCREMENT PRIMARY KEY,
         script_id INT,
-        status VARCHAR(50) NOT NULL,
+        status ENUM('success', 'failure', 'warning', 'info') NOT NULL,
         message TEXT,
+        detailed_message LONGTEXT,
         execution_time DECIMAL(10,2),
         reported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (script_id) REFERENCES scripts(id)
     )");
     echo "Script_results table created successfully.\n";
+    
+    // Check if detailed_message column exists, add if missing
+    $stmt = $pdo->query("SHOW COLUMNS FROM script_results LIKE 'detailed_message'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE script_results ADD COLUMN detailed_message LONGTEXT AFTER message");
+        echo "Added detailed_message column to existing table.\n";
+    }
+    
+    // Update status column to ENUM if it's not already
+    $stmt = $pdo->query("SHOW COLUMNS FROM script_results WHERE Field = 'status'");
+    $column = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($column && strpos($column['Type'], 'enum') === false) {
+        $pdo->exec("ALTER TABLE script_results MODIFY COLUMN status ENUM('success', 'failure', 'warning', 'info') NOT NULL");
+        echo "Updated status column to support new status types.\n";
+    }
     
     // Insert default admin user if not exists
     $adminUsername = 'admin';

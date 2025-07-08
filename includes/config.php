@@ -6,8 +6,12 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 
 
-// Initialize session
+// Initialize session (only if not already started)
+// PHP_SESSION_NONE means no session exists yet
 if (session_status() == PHP_SESSION_NONE) {
+    // Set session to last 1 year (31536000 seconds)
+    ini_set('session.gc_maxlifetime', 31536000);
+    session_set_cookie_params(31536000);
     session_start();
 }
 

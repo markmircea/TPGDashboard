@@ -113,7 +113,10 @@ function updateRecentResults(results) {
                         ${escapeHtml(result.status)}
                     </span>
                 </td>
-                <td>${escapeHtml(result.message)}</td>
+                <td>
+                    ${escapeHtml(result.message)}
+                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" onclick="showDetailedMessage('${escapeHtml(result.detailed_message)}')">View Details</button>` : ''}
+                </td>
                 <td>${formatExecutionTime(result.execution_time)}</td>
                 <td>${formatDate(result.reported_at)}</td>
             </tr>
@@ -219,7 +222,10 @@ function updateHistoryResults(results) {
                         ${escapeHtml(result.status)}
                     </span>
                 </td>
-                <td>${escapeHtml(result.message)}</td>
+                <td>
+                    ${escapeHtml(result.message)}
+                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" onclick="showDetailedMessage('${escapeHtml(result.detailed_message)}')">View Details</button>` : ''}
+                </td>
                 <td>${formatExecutionTime(result.execution_time)}</td>
                 <td>${formatDate(result.reported_at)}</td>
             </tr>
@@ -335,6 +341,27 @@ function startAutoRefresh() {
             refreshRecentResults();
         }
     }, 30000); // Refresh every 30 seconds
+}
+
+// Modal functions
+function showDetailedMessage(message) {
+    const modal = document.getElementById('detailModal');
+    const detailText = document.getElementById('detailText');
+    detailText.textContent = message;
+    modal.style.display = 'flex';
+}
+
+function closeDetailModal() {
+    const modal = document.getElementById('detailModal');
+    modal.style.display = 'none';
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('detailModal');
+    if (event.target === modal) {
+        closeDetailModal();
+    }
 }
 
 // Start auto-refresh when page loads

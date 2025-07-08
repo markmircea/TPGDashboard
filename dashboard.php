@@ -112,7 +112,12 @@ $allScripts = getAllScripts();
                                                 <?php echo escape($result['status']); ?>
                                             </span>
                                         </td>
-                                        <td><?php echo escape($result['message']); ?></td>
+                                        <td>
+                                            <?php echo escape($result['message']); ?>
+                                            <?php if (!empty($result['detailed_message'])): ?>
+                                                <br><button class="btn btn-sm btn-secondary" onclick="showDetailedMessage('<?php echo escape($result['detailed_message']); ?>')">View Details</button>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?php echo formatExecutionTime($result['execution_time']); ?></td>
                                         <td><?php echo formatDate($result['reported_at']); ?></td>
                                     </tr>
@@ -201,6 +206,8 @@ $allScripts = getAllScripts();
                             <option value="all">All</option>
                             <option value="success">Success</option>
                             <option value="failure">Failure</option>
+                            <option value="warning">Warning</option>
+                            <option value="info">Info</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -224,6 +231,19 @@ $allScripts = getAllScripts();
             </div>
         </div>
     </main>
+
+    <!-- Modal for detailed messages -->
+    <div id="detailModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detailed Message</h3>
+                <span class="close" onclick="closeDetailModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <pre id="detailText"></pre>
+            </div>
+        </div>
+    </div>
 
     <script src="js/dashboard.js"></script>
 </body>

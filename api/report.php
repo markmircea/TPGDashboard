@@ -26,9 +26,9 @@ if (!$data || !isset($data['script_name']) || !isset($data['status'])) {
 }
 
 // Validate status
-if (!in_array($data['status'], ['success', 'failure'])) {
+if (!in_array($data['status'], ['success', 'failure', 'warning', 'info'])) {
     http_response_code(400);
-    echo json_encode(['error' => 'Status must be either "success" or "failure"']);
+    echo json_encode(['error' => 'Status must be one of: success, failure, warning, info']);
     exit;
 }
 
@@ -38,6 +38,7 @@ try {
     $scriptType = isset($data['script_type']) ? trim($data['script_type']) : 'general';
     $status = $data['status'];
     $message = isset($data['message']) ? trim($data['message']) : '';
+    $detailedMessage = isset($data['detailed_message']) ? trim($data['detailed_message']) : '';
     $executionTime = isset($data['execution_time']) ? floatval($data['execution_time']) : null;
     $description = isset($data['description']) ? trim($data['description']) : '';
     
@@ -52,7 +53,7 @@ try {
     $scriptId = getOrCreateScript($scriptName, $scriptType, $description);
     
     // Record the result
-    $resultId = recordScriptResult($scriptId, $status, $message, $executionTime);
+    $resultId = recordScriptResult($scriptId, $status, $message, $detailedMessage, $executionTime);
     
     // Return success response
     echo json_encode([

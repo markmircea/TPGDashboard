@@ -22,11 +22,11 @@ function getOrCreateScript($scriptName, $scriptType, $description = '') {
 }
 
 // Record script result
-function recordScriptResult($scriptId, $status, $message = '', $executionTime = null) {
+function recordScriptResult($scriptId, $status, $message = '', $detailedMessage = '', $executionTime = null) {
     $pdo = getDatabase();
     
-    $stmt = $pdo->prepare("INSERT INTO script_results (script_id, status, message, execution_time) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$scriptId, $status, $message, $executionTime]);
+    $stmt = $pdo->prepare("INSERT INTO script_results (script_id, status, message, detailed_message, execution_time) VALUES (?, ?, ?, ?, ?)");
+    $stmt->execute([$scriptId, $status, $message, $detailedMessage, $executionTime]);
     
     return $pdo->lastInsertId();
 }
