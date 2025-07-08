@@ -1,84 +1,6 @@
 # TPG Dashboard - Script Monitoring System
 
-A web-based dashboard for monitoring the status and results of company scripts. Built with PHP, HTML, CSS, and vanilla JavaScript with SQLite database.
-
-## Features
-
-- **Authentication System**: Simple username/password login with session management
-- **Real-time Monitoring**: View recent script executions and their status
-- **Script Management**: Automatic registration of new scripts on first report
-- **Historical Analysis**: Filter and search through historical script results by date, script type, and status
-- **Statistics Dashboard**: Overview of success rates, total executions, and script performance
-- **API Endpoint**: RESTful API for scripts to report their status
-- **Export Functionality**: Export filtered results to CSV format
-- **Responsive Design**: Works on desktop and mobile devices
-
-## Project Structure
-
-```
-TPGDashboard/
-├── index.php              # Login page
-├── dashboard.php           # Main dashboard interface
-├── test-script.php         # Sample script for testing
-├── includes/
-│   ├── config.php         # Database and app configuration
-│   ├── auth.php           # Authentication functions
-│   └── functions.php      # Database operations and utilities
-├── api/
-│   ├── report.php         # Main API endpoint for script reporting
-│   ├── get-recent.php     # Get recent script results
-│   ├── get-stats.php      # Get dashboard statistics
-│   ├── get-history.php    # Get filtered historical results
-│   └── export.php         # Export results to CSV
-├── css/
-│   ├── style.css          # Main styles and login page
-│   └── dashboard.css      # Dashboard-specific styles
-├── js/
-│   └── dashboard.js       # Dashboard JavaScript functionality
-└── database/
-    └── dashboard.db       # SQLite database (auto-created)
-```
-
-## Installation
-
-### Requirements
-
-- PHP 7.4 or higher
-- MySQL (usually included)
-- Web server (Apache, Nginx, or PHP built-in server)
-
-### Setup Steps
-
-1. **Clone or download** the project to your web server directory:
-   ```bash
-   git clone <repository-url> /path/to/webroot/TPGDashboard
-   ```
-
-2. **Set permissions** for the database directory:
-   ```bash
-   chmod 755 database/
-   chmod 666 database/dashboard.db  # If database file exists
-   ```
-
-3. **Configure the application** (optional):
-   - Edit `includes/config.php` to change default credentials or database path
-   - Default login: username `admin`, password `admin123`
-
-4. **Start your web server**:
-   
-   **Option A: PHP Built-in Server (for development)**
-   ```bash
-   cd /path/to/TPGDashboard
-   php -S localhost:8000
-   ```
-   
-   **Option B: Apache/Nginx**
-   - Ensure the project is in your web root directory
-   - Access via your configured domain/IP
-
-5. **Access the dashboard**:
-   - Open your browser and navigate to `http://localhost:8000` (or your configured URL)
-   - Login with username: `admin`, password: `admin123`
+A web-based dashboard for monitoring the status and results of TPG scripts. Built with PHP, HTML, CSS, and vanilla JavaScript with MySQL
 
 ## Usage
 
@@ -164,8 +86,10 @@ curl -X POST http://your-domain.com/api/report.php \
   }'
 ```
 
+**Powershell Example:**
+```powershell
 Invoke-WebRequest -Uri "http://localhost:8000/api/report.php" -Method POST -Headers @{"Content-Type"="application/json"} -Body '{"script_name":"detailed_test","status":"info","message":"Test with detailed info","detailed_message":"This is a very detailed message that contains:\n\n1. Multiple lines of information\n2. Technical details about the process\n3. Error logs or debug information\n4. Any other relevant data that might be too long for the main message field\n\nThis demonstrates how detailed messages can provide comprehensive information about script execution."}'
-
+```
 
 #### Complete Request Body Reference
 
@@ -206,7 +130,7 @@ This will simulate an SFTP download script and report results to the dashboard.
 
 ## Database Schema
 
-The application uses SQLite with three main tables:
+The application uses MySQL with three main tables:
 
 - **users**: User authentication
 - **scripts**: Registered scripts and their metadata
@@ -277,3 +201,83 @@ This project is open source. Feel free to modify and distribute according to you
 ## Support
 
 For issues and questions, check the troubleshooting section above or review the code comments for implementation details.
+
+
+## Features
+
+- **Authentication System**: Simple username/password login with session management
+- **Real-time Monitoring**: View recent script executions and their status
+- **Script Management**: Automatic registration of new scripts on first report
+- **Historical Analysis**: Filter and search through historical script results by date, script type, and status
+- **Statistics Dashboard**: Overview of success rates, total executions, and script performance
+- **API Endpoint**: RESTful API for scripts to report their status
+- **Export Functionality**: Export filtered results to CSV format
+- **Responsive Design**: Works on desktop and mobile devices
+
+## Project Structure
+
+```
+TPGDashboard/
+├── index.php              # Login page
+├── dashboard.php           # Main dashboard interface
+├── test-script.php         # Sample script for testing
+├── includes/
+│   ├── config.php         # Database and app configuration
+│   ├── auth.php           # Authentication functions
+│   └── functions.php      # Database operations and utilities
+├── api/
+│   ├── report.php         # Main API endpoint for script reporting
+│   ├── get-recent.php     # Get recent script results
+│   ├── get-stats.php      # Get dashboard statistics
+│   ├── get-history.php    # Get filtered historical results
+│   └── export.php         # Export results to CSV
+├── css/
+│   ├── style.css          # Main styles and login page
+│   └── dashboard.css      # Dashboard-specific styles
+├── js/
+│   └── dashboard.js       # Dashboard JavaScript functionality
+└── database/
+    └── dashboard.db       # MySQL database (auto-created)
+```
+
+## Installation
+
+### Requirements
+
+- PHP 7.4 or higher
+- MySQL (usually included)
+- Web server (Apache, Nginx, or PHP built-in server)
+
+### Setup Steps
+
+1. **Clone or download** the project to your web server directory:
+   ```bash
+   git clone <repository-url> /path/to/webroot/TPGDashboard
+   ```
+
+2. **Set permissions** for the database directory:
+   ```bash
+   chmod 755 database/
+   chmod 666 database/dashboard.db  # If database file exists
+   ```
+
+3. **Configure the application** (optional):
+   - Edit `includes/config.php` to change default credentials or database path
+   - Default login: username `admin`, password `admin123`
+
+4. **Start your web server**:
+   
+   **Option A: PHP Built-in Server (for development)**
+   ```bash
+   cd /path/to/TPGDashboard
+   php -S localhost:8000
+   ```
+   
+   **Option B: Apache/Nginx**
+   - Ensure the project is in your web root directory
+   - Access via your configured domain/IP
+
+5. **Access the dashboard**:
+   - Open your browser and navigate to `http://localhost:8000` (or your configured URL)
+   - Login with username: `admin`, password: `admin123`
+

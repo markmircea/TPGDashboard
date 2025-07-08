@@ -343,6 +343,11 @@
     flex-direction: column;
 }
 
+.modal-large {
+    max-width: 90%;
+    max-height: 90%;
+}
+
 .modal-header {
     padding: 1.5rem;
     border-bottom: 1px solid #e9ecef;
@@ -387,6 +392,128 @@
     font-family: 'Courier New', monospace;
     font-size: 0.875rem;
     line-height: 1.4;
+}
+
+/* Markdown content styles */
+.markdown-content {
+    line-height: 1.6;
+    color: #333;
+}
+
+.markdown-content h1 {
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.markdown-content h2 {
+    color: #444;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #e1e1e1;
+    padding-bottom: 0.5rem;
+}
+
+.markdown-content h3 {
+    color: #555;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.markdown-content h4 {
+    color: #666;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.markdown-content pre {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.markdown-content code {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 3px;
+    padding: 0.2rem 0.4rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+}
+
+.markdown-content pre code {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.markdown-content a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.markdown-content a:hover {
+    text-decoration: underline;
+}
+
+.markdown-content strong {
+    font-weight: 600;
+}
+
+.markdown-content em {
+    font-style: italic;
+}
+
+.markdown-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+    border: 1px solid #e9ecef;
+    padding: 0.75rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.markdown-content table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.markdown-content table tbody tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.markdown-content table tbody tr:hover {
+    background: #e9ecef;
+}
+
+/* Loading styles for API modal */
+.loading p {
+    margin-left: 1rem;
+    color: #666;
+}
+
+/* Error styles */
+.error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 5px;
+    border: 1px solid #f5c6cb;
+    text-align: center;
 }
 
 /* Responsive design */

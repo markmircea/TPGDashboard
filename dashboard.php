@@ -43,6 +43,7 @@ $allScripts = getAllScripts();
         <div class="header-content">
             <h1><?php echo APP_NAME; ?></h1>
             <div class="user-info">
+                <button class="btn btn-info btn-sm" onclick="showApiInstructions()">API Instructions</button>
                 <span>Welcome, <?php echo escape($_SESSION['username']); ?></span>
                 <a href="?logout" class="btn btn-secondary btn-sm">Logout</a>
             </div>
@@ -57,15 +58,15 @@ $allScripts = getAllScripts();
                 <div class="stat-value"><?php echo $stats['total_scripts']; ?></div>
             </div>
             <div class="stat-card info">
-                <h3>Total Executions</h3>
+                <h3>Total Executions - Today</h3>
                 <div class="stat-value"><?php echo $stats['total_executions']; ?></div>
             </div>
             <div class="stat-card success">
-                <h3>Success Rate</h3>
+                <h3>Success Rate - Today</h3>
                 <div class="stat-value"><?php echo $stats['success_rate']; ?>%</div>
             </div>
             <div class="stat-card danger">
-                <h3>Failed Executions</h3>
+                <h3>Failed Executions - Today</h3>
                 <div class="stat-value"><?php echo $stats['failed_executions']; ?></div>
             </div>
         </div>
@@ -243,6 +244,19 @@ $allScripts = getAllScripts();
             </div>
             <div class="modal-body">
                 <pre id="detailText"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for API Instructions -->
+    <div id="apiModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>API Instructions</h3>
+                <span class="close" onclick="closeApiModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="apiInstructions"></div>
             </div>
         </div>
     </div>

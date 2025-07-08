@@ -361,11 +361,180 @@ function closeDetailModal() {
     modal.style.display = 'none';
 }
 
+// API Instructions Modal functions
+function showApiInstructions() {
+    const modal = document.getElementById('apiModal');
+    const instructionsContainer = document.getElementById('apiInstructions');
+    
+    // Show loading
+    instructionsContainer.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading API instructions...</p></div>';
+    modal.style.display = 'flex';
+    
+    // Fetch README content with cache-busting
+    const cacheBuster = new Date().getTime();
+    fetch(`api/get-readme.php?t=${cacheBuster}`, {
+        cache: 'no-cache',
+        headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('DEBUG INFO:');
+                console.log('File path:', data.file_path);
+                console.log('File size:', data.file_size, 'bytes');
+                console.log('README last modified:', new Date(data.last_modified * 1000));
+                console.log('Current time:', new Date(data.timestamp * 1000));
+                console.log('Content preview:', data.preview);
+                // Convert markdown to HTML (simple conversion)
+                const htmlContent = convertMarkdownToHtml(data.content);
+                instructionsContainer.innerHTML = htmlContent;
+            } else {
+                console.error('Error loading README:', data.error);
+                console.error('Attempted path:', data.attempted_path);
+                instructionsContainer.innerHTML = '<div class="error">Error loading API instructions: ' + data.error + '</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading API instructions:', error);
+            instructionsContainer.innerHTML = '<div class="error">Error loading API instructions. Please try again.</div>';
+        });
+}
+
+function closeApiModal() {
+    const modal = document.getElementById('apiModal');
+    modal.style.display = 'none';
+}
+
+// Simple markdown to HTML converter
+function convertMarkdownToHtml(markdown) {
+    let html = markdown;
+    
+    // Convert tables first (before other conversions that might interfere)
+    html = convertMarkdownTables(html);
+    
+    // Convert other markdown elements
+    html = html
+        // Headers (make sure to not affect table content)
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // Code blocks (handle multiline)
+        .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+        // Inline code
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        // Links
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+        // Convert remaining newlines to breaks (but preserve table structure)
+        .replace(/\n(?!<\/?(?:table|thead|tbody|tr|th|td))/g, '<br>');
+    
+    return '<div class="markdown-content">' + html + '</div>';
+}
+
+// Convert markdown tables to HTML
+function convertMarkdownTables(markdown) {
+    // Use a more precise regex to find table blocks
+    const tableRegex = /((?:^\|?[^\n]*\|[^\n]*$\n?)+)/gm;
+    
+    return markdown.replace(tableRegex, (match) => {
+        const lines = match.trim().split('\n');
+        
+        // Check if this is actually a table (has separator line)
+        const hasSeparator = lines.some(line => /^\s*\|?\s*[-:]+\s*\|/.test(line));
+        
+        if (!hasSeparator || lines.length < 2) {
+            return match; // Not a table, return as-is
+        }
+        
+        return convertSingleTable(lines);
+    });
+}
+
+// Convert a single markdown table to HTML
+function convertSingleTable(lines) {
+    let html = '<table>';
+    let headerProcessed = false;
+    let hasValidRows = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Skip empty lines
+        if (!line) continue;
+        
+        // Skip separator lines (like |---|---|---| or |:---|:---:|---:|)
+        if (/^\s*\|?\s*[-:]+\s*\|/.test(line)) {
+            continue;
+        }
+        
+        // Only process lines that contain pipes
+        if (!line.includes('|')) {
+            continue;
+        }
+        
+        // Split by | and clean up cells
+        let cells = line.split('|');
+        
+        // Remove first and last empty cells if line starts/ends with |
+        if (cells[0].trim() === '') {
+            cells = cells.slice(1);
+        }
+        if (cells[cells.length - 1].trim() === '') {
+            cells = cells.slice(0, -1);
+        }
+        
+        // Trim all cells and filter out completely empty ones
+        cells = cells.map(cell => cell.trim()).filter((cell, index, arr) => {
+            // Keep the cell if it's not empty, or if it's empty but not all cells are empty
+            return cell !== '' || arr.some(c => c !== '');
+        });
+        
+        if (cells.length === 0) continue;
+        
+        if (!headerProcessed) {
+            // First valid row is header
+            html += '<thead><tr>';
+            cells.forEach(cell => {
+                html += `<th>${cell || '&nbsp;'}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            headerProcessed = true;
+            hasValidRows = true;
+        } else {
+            // Data rows
+            html += '<tr>';
+            cells.forEach(cell => {
+                html += `<td>${cell || '&nbsp;'}</td>`;
+            });
+            html += '</tr>';
+            hasValidRows = true;
+        }
+    }
+    
+    html += '</tbody></table>';
+    
+    // Only return the table if we actually processed valid rows
+    return hasValidRows ? html : lines.join('\n');
+}
+
 // Close modal when clicking outside of it
 window.onclick = function(event) {
-    const modal = document.getElementById('detailModal');
-    if (event.target === modal) {
+    const detailModal = document.getElementById('detailModal');
+    const apiModal = document.getElementById('apiModal');
+    
+    if (event.target === detailModal) {
         closeDetailModal();
+    }
+    
+    if (event.target === apiModal) {
+        closeApiModal();
     }
 }
 

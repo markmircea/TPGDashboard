@@ -47,26 +47,32 @@ function getRecentResults($limit = 20) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Get script statistics
+// Get script statistics (Today only)
 function getScriptStatistics() {
     $pdo = getDatabase();
     
-    // Total executions
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM script_results");
+    // Get today's date in the format the database expects
+    $today = date('Y-m-d');
+    
+    // Total executions for today
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM script_results WHERE DATE(reported_at) = ?");
+    $stmt->execute([$today]);
     $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // Success count
-    $stmt = $pdo->query("SELECT COUNT(*) as success FROM script_results WHERE status = 'success'");
+    // Success count for today
+    $stmt = $pdo->prepare("SELECT COUNT(*) as success FROM script_results WHERE status = 'success' AND DATE(reported_at) = ?");
+    $stmt->execute([$today]);
     $success = $stmt->fetch(PDO::FETCH_ASSOC)['success'];
     
-    // Failure count
-    $stmt = $pdo->query("SELECT COUNT(*) as failure FROM script_results WHERE status = 'failure'");
+    // Failure count for today
+    $stmt = $pdo->prepare("SELECT COUNT(*) as failure FROM script_results WHERE status = 'failure' AND DATE(reported_at) = ?");
+    $stmt->execute([$today]);
     $failure = $stmt->fetch(PDO::FETCH_ASSOC)['failure'];
     
-    // Success rate
+    // Success rate for today
     $successRate = $total > 0 ? round(($success / $total) * 100, 2) : 0;
     
-    // Scripts count
+    // Scripts count (total scripts - this remains the same as it's not time-dependent)
     $stmt = $pdo->query("SELECT COUNT(*) as scripts FROM scripts");
     $scriptsCount = $stmt->fetch(PDO::FETCH_ASSOC)['scripts'];
     
