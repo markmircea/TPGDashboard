@@ -6,9 +6,9 @@
 
 // Database configuration
 $host = 'localhost';
-$user = 'root';
-$pass = '';
-$dbname = 'tpg_dashboard';
+$user = 'aibrainl_tpg';
+$pass = 'She-wolf11!!';
+$dbname = 'aibrainl_tpg';
 
 try {
     // Connect to MySQL server (without specifying database)
