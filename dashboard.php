@@ -144,8 +144,8 @@ $allScripts = getAllScripts();
             <div class="table-container">
                 <div class="table-header">
                     <h2>
-                        <i class="fas fa-activity"></i>
-                        Recent Activity
+                        <i class="fas fa-calendar-day"></i>
+                        Scripts Run Today
                     </h2>
                     <button class="btn btn-primary btn-sm" onclick="refreshData()">
                         <i class="fas fa-sync-alt"></i>
@@ -156,8 +156,8 @@ $allScripts = getAllScripts();
                     <?php if (empty($recentResults)): ?>
                         <div class="empty-state">
                             <i class="fas fa-inbox"></i>
-                            <h3>No script results yet</h3>
-                            <p>Scripts will appear here once they start reporting their status.</p>
+                            <h3>No scripts ran today</h3>
+                            <p>Scripts will appear here once they start executing today.</p>
                         </div>
                     <?php else: ?>
                         <table class="table sortable-table">
@@ -378,9 +378,27 @@ $allScripts = getAllScripts();
                 <div id="history-results">
                     <div class="loading">
                         <div class="spinner"></div>
+                        <p style="margin-top: 1rem; color: var(--medium-gray);">
+                            <i class="fas fa-search"></i> Loading historical data...
+                        </p>
                     </div>
                 </div>
-                <div id="pagination" class="pagination" style="display: none;"></div>
+                
+                <!-- Enhanced Pagination -->
+                <div id="pagination" class="pagination-container" style="display: none;">
+                    <div class="pagination-info">
+                        <span id="pagination-text">Showing 0 - 0 of 0 results</span>
+                    </div>
+                    <div id="pagination" class="pagination"></div>
+                    <div class="pagination-controls">
+                        <select id="per-page-select" class="form-control">
+                            <option value="25">25 per page</option>
+                            <option value="50" selected>50 per page</option>
+                            <option value="100">100 per page</option>
+                            <option value="250">250 per page</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
     </main>

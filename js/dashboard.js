@@ -1,6 +1,9 @@
 // Dashboard JavaScript functionality
 let currentPage = 1;
 let currentFilters = {};
+let currentPerPage = 50;
+let totalResults = 0;
+let totalPages = 0;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
@@ -19,8 +22,180 @@ function initializeDashboard() {
     document.getElementById('date-to').value = formatDateForInput(today);
     document.getElementById('date-from').value = formatDateForInput(thirtyDaysAgo);
     
+    // Setup per-page selector
+    const perPageSelect = document.getElementById('per-page-select');
+    if (perPageSelect) {
+        perPageSelect.addEventListener('change', function() {
+            currentPerPage = parseInt(this.value);
+            currentPage = 1; // Reset to first page
+            loadHistoryData(1);
+        });
+    }
+    
     // Load initial history data
     loadHistoryData();
+}
+
+// Update history results table
+function updateHistoryResults(results) {
+    const container = document.getElementById('history-results');
+    
+    if (results.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <h3>No results found</h3>
+                <p>Try adjusting your filters to see more results.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <table class="table sortable-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-column="script_name">
+                        <i class="fas fa-file-alt"></i> Script Name
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="script_type">
+                        <i class="fas fa-tag"></i> Type
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="status">
+                        <i class="fas fa-traffic-light"></i> Status
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="message">
+                        <i class="fas fa-comment"></i> Message
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="execution_time">
+                        <i class="fas fa-stopwatch"></i> Execution Time
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="reported_at">
+                        <i class="fas fa-clock"></i> Reported At
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    results.forEach(result => {
+        const statusIcons = {
+            'success': 'fas fa-check',
+            'failure': 'fas fa-times', 
+            'warning': 'fas fa-exclamation',
+            'info': 'fas fa-info'
+        };
+        
+        html += `
+            <tr>
+                <td>${escapeHtml(result.script_name)}</td>
+                <td>${escapeHtml(result.script_type)}</td>
+                <td>
+                    <span class="status-badge ${result.status}">
+                        <i class="${statusIcons[result.status] || 'fas fa-question'}"></i>
+                        ${escapeHtml(result.status)}
+                    </span>
+                </td>
+                <td>
+                    ${escapeHtml(result.message)}
+                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" data-detailed-message="${escapeHtml(result.detailed_message)}" onclick="showDetailedMessageFromButton(this)"><i class="fas fa-eye"></i> View Details</button>` : ''}
+                </td>
+                <td>${formatExecutionTime(result.execution_time)}</td>
+                <td>${formatDate(result.reported_at)}</td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+    
+    // Re-initialize sorting for the new table
+    initializeSortableTables();
+}
+
+// Update recent results table (compatibility function)
+function updateRecentResults(results) {
+    // For backward compatibility, redirect to updateTodaysScripts
+    updateTodaysScripts(results);
+}
+
+// Enhanced pagination update function
+function updateEnhancedPagination(pagination) {
+    const container = document.querySelector('.pagination-container');
+    const paginationDiv = document.querySelector('.pagination');
+    const paginationText = document.getElementById('pagination-text');
+    
+    if (pagination.total_pages <= 1) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'flex';
+    
+    // Update pagination info
+    const startItem = (pagination.current_page - 1) * currentPerPage + 1;
+    const endItem = Math.min(pagination.current_page * currentPerPage, pagination.total_results);
+    
+    paginationText.innerHTML = `
+        <i class="fas fa-info-circle"></i>
+        Showing ${startItem.toLocaleString()} - ${endItem.toLocaleString()} of ${pagination.total_results.toLocaleString()} results
+    `;
+    
+    // Build pagination controls
+    let html = '';
+    
+    // Previous button
+    html += `
+        <button ${pagination.current_page <= 1 ? 'disabled' : ''} 
+                onclick="loadHistoryData(${pagination.current_page - 1})">
+            <i class="fas fa-chevron-left"></i> Previous
+        </button>
+    `;
+    
+    // First page
+    if (pagination.current_page > 3) {
+        html += `<button onclick="loadHistoryData(1)">1</button>`;
+        if (pagination.current_page > 4) {
+            html += `<span class="ellipsis">...</span>`;
+        }
+    }
+    
+    // Page numbers around current page
+    const startPage = Math.max(1, pagination.current_page - 2);
+    const endPage = Math.min(pagination.total_pages, pagination.current_page + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        html += `
+            <button class="${i === pagination.current_page ? 'current-page' : ''}" 
+                    onclick="loadHistoryData(${i})">
+                ${i}
+            </button>
+        `;
+    }
+    
+    // Last page
+    if (pagination.current_page < pagination.total_pages - 2) {
+        if (pagination.current_page < pagination.total_pages - 3) {
+            html += `<span class="ellipsis">...</span>`;
+        }
+        html += `<button onclick="loadHistoryData(${pagination.total_pages})">${pagination.total_pages}</button>`;
+    }
+    
+    // Next button
+    html += `
+        <button ${pagination.current_page >= pagination.total_pages ? 'disabled' : ''} 
+                onclick="loadHistoryData(${pagination.current_page + 1})">
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+    `;
+    
+    paginationDiv.innerHTML = html;
 }
 
 // Setup enhanced UI features
@@ -269,7 +444,7 @@ function refreshData() {
     refreshBtn.disabled = true;
     
     Promise.all([
-        refreshRecentResults(),
+        refreshTodaysScripts(), // Changed from refreshRecentResults
         refreshStatistics()
     ]).then(() => {
         refreshBtn.innerHTML = originalText;
@@ -305,18 +480,23 @@ function showSuccessMessage(message) {
     }, 3000);
 }
 
-// Refresh recent results only
-function refreshRecentResults() {
-    fetch('api/get-recent.php')
+// Refresh today's scripts (for overview section)
+function refreshTodaysScripts() {
+    return fetch('api/get-todays-scripts.php')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                updateRecentResults(data.results);
+                updateTodaysScripts(data.results);
             }
         })
         .catch(error => {
-            console.error('Error refreshing recent results:', error);
+            console.error('Error refreshing today\'s scripts:', error);
         });
+}
+
+// Refresh recent results only (kept for compatibility)
+function refreshRecentResults() {
+    return refreshTodaysScripts(); // Redirect to today's scripts
 }
 
 // Refresh statistics
@@ -333,16 +513,16 @@ function refreshStatistics() {
         });
 }
 
-// Update recent results table
-function updateRecentResults(results) {
+// Update today's scripts table (for overview section)
+function updateTodaysScripts(results) {
     const container = document.getElementById('recent-results');
     
     if (results.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <i class="fas fa-inbox"></i>
-                <h3>No script results yet</h3>
-                <p>Scripts will appear here once they start reporting their status.</p>
+                <i class="fas fa-calendar-day"></i>
+                <h3>No scripts ran today</h3>
+                <p>Scripts will appear here once they start executing today.</p>
             </div>
         `;
         return;
@@ -360,20 +540,20 @@ function updateRecentResults(results) {
                         <i class="fas fa-tag"></i> Type
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
-                    <th class="sortable" data-column="status">
-                        <i class="fas fa-traffic-light"></i> Status
+                    <th class="sortable" data-column="total_runs_today">
+                        <i class="fas fa-play"></i> Runs Today
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
-                    <th class="sortable" data-column="message">
-                        <i class="fas fa-comment"></i> Message
+                    <th class="sortable" data-column="last_status">
+                        <i class="fas fa-traffic-light"></i> Last Status
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
-                    <th class="sortable" data-column="execution_time">
-                        <i class="fas fa-stopwatch"></i> Execution Time
+                    <th class="sortable" data-column="success_rate_today">
+                        <i class="fas fa-percentage"></i> Success Rate Today
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
-                    <th class="sortable" data-column="reported_at">
-                        <i class="fas fa-clock"></i> Reported At
+                    <th class="sortable" data-column="last_execution">
+                        <i class="fas fa-clock"></i> Last Execution
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
                 </tr>
@@ -394,17 +574,24 @@ function updateRecentResults(results) {
                 <td>${escapeHtml(result.script_name)}</td>
                 <td>${escapeHtml(result.script_type)}</td>
                 <td>
-                    <span class="status-badge ${result.status}">
-                        <i class="${statusIcons[result.status] || 'fas fa-question'}"></i>
-                        ${escapeHtml(result.status)}
+                    <span class="badge badge-info">
+                        <i class="fas fa-play"></i>
+                        ${result.total_runs_today}
                     </span>
                 </td>
                 <td>
-                    ${escapeHtml(result.message)}
-                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" data-detailed-message="${escapeHtml(result.detailed_message)}" onclick="showDetailedMessageFromButton(this)"><i class="fas fa-eye"></i> View Details</button>` : ''}
+                    <span class="status-badge ${result.last_status}">
+                        <i class="${statusIcons[result.last_status] || 'fas fa-question'}"></i>
+                        ${escapeHtml(result.last_status)}
+                    </span>
                 </td>
-                <td>${formatExecutionTime(result.execution_time)}</td>
-                <td>${formatDate(result.reported_at)}</td>
+                <td>
+                    <span class="status-badge ${result.success_rate_today >= 90 ? 'success' : (result.success_rate_today >= 70 ? 'warning' : 'danger')}">
+                        <i class="fas fa-chart-line"></i>
+                        ${result.success_rate_today}%
+                    </span>
+                </td>
+                <td>${formatDate(result.last_execution)}</td>
             </tr>
         `;
     });
@@ -446,6 +633,7 @@ function loadHistoryData(page = 1) {
     
     const params = new URLSearchParams({
         page: page,
+        per_page: currentPerPage,
         ...currentFilters
     });
     
@@ -453,6 +641,9 @@ function loadHistoryData(page = 1) {
     document.getElementById('history-results').innerHTML = `
         <div class="loading">
             <div class="spinner"></div>
+            <p style="margin-top: 1rem; color: var(--medium-gray);">
+                <i class="fas fa-search"></i> Loading historical data...
+            </p>
         </div>
     `;
     
@@ -460,8 +651,10 @@ function loadHistoryData(page = 1) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                totalResults = data.pagination.total_results;
+                totalPages = data.pagination.total_pages;
                 updateHistoryResults(data.results);
-                updatePagination(data.pagination);
+                updateEnhancedPagination(data.pagination);
             } else {
                 showError('Failed to load history data: ' + data.error);
             }
@@ -869,7 +1062,7 @@ document.addEventListener('click', function(event) {
 function startAutoRefresh() {
     setInterval(() => {
         if (document.querySelector('#overview.active')) {
-            refreshRecentResults().catch(console.error);
+            refreshTodaysScripts().catch(console.error);
         }
     }, 30000); // Refresh every 30 seconds
 }
