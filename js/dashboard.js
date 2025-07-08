@@ -115,7 +115,7 @@ function updateRecentResults(results) {
                 </td>
                 <td>
                     ${escapeHtml(result.message)}
-                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" onclick="showDetailedMessage('${escapeHtml(result.detailed_message)}')">View Details</button>` : ''}
+                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" data-detailed-message="${escapeHtml(result.detailed_message)}" onclick="showDetailedMessageFromButton(this)">View Details</button>` : ''}
                 </td>
                 <td>${formatExecutionTime(result.execution_time)}</td>
                 <td>${formatDate(result.reported_at)}</td>
@@ -224,7 +224,7 @@ function updateHistoryResults(results) {
                 </td>
                 <td>
                     ${escapeHtml(result.message)}
-                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" onclick="showDetailedMessage('${escapeHtml(result.detailed_message)}')">View Details</button>` : ''}
+                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" data-detailed-message="${escapeHtml(result.detailed_message)}" onclick="showDetailedMessageFromButton(this)">View Details</button>` : ''}
                 </td>
                 <td>${formatExecutionTime(result.execution_time)}</td>
                 <td>${formatDate(result.reported_at)}</td>
@@ -349,6 +349,11 @@ function showDetailedMessage(message) {
     const detailText = document.getElementById('detailText');
     detailText.textContent = message;
     modal.style.display = 'flex';
+}
+
+function showDetailedMessageFromButton(button) {
+    const message = button.getAttribute('data-detailed-message');
+    showDetailedMessage(message);
 }
 
 function closeDetailModal() {

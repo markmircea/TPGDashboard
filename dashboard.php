@@ -115,7 +115,7 @@ $allScripts = getAllScripts();
                                         <td>
                                             <?php echo escape($result['message']); ?>
                                             <?php if (!empty($result['detailed_message'])): ?>
-                                                <br><button class="btn btn-sm btn-secondary" onclick="showDetailedMessage('<?php echo escape($result['detailed_message']); ?>')">View Details</button>
+                                                <br><button class="btn btn-sm btn-secondary" data-detailed-message="<?php echo htmlspecialchars($result['detailed_message'], ENT_QUOTES, 'UTF-8'); ?>" onclick="showDetailedMessageFromButton(this)">View Details</button>
                                             <?php endif; ?>
                                         </td>
                                         <td><?php echo formatExecutionTime($result['execution_time']); ?></td>
@@ -231,6 +231,8 @@ $allScripts = getAllScripts();
             </div>
         </div>
     </main>
+    <br>
+    <br>
 
     <!-- Modal for detailed messages -->
     <div id="detailModal" class="modal" style="display: none;">

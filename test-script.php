@@ -81,6 +81,33 @@ $executionTime = round($endTime - $startTime, 2);
 
 echo "Script completed in {$executionTime} seconds\n";
 
+// Create detailed message with technical information
+$detailedMessage = "Script Execution Details:\n\n";
+$detailedMessage .= "Server: sftp.example.com:22\n";
+$detailedMessage .= "Connection Method: SSH Key Authentication\n";
+$detailedMessage .= "Remote Directory: /incoming/files/\n";
+$detailedMessage .= "Local Directory: ./downloads/\n\n";
+
+if ($success) {
+    $detailedMessage .= "Files Downloaded:\n";
+    for ($i = 1; $i <= $filesDownloaded; $i++) {
+        $detailedMessage .= "- file_{$i}.csv (Size: " . rand(1024, 10240) . " bytes)\n";
+    }
+    $detailedMessage .= "\nTotal Transfer Size: " . number_format($filesDownloaded * 5000) . " bytes\n";
+    $detailedMessage .= "Average Transfer Speed: " . rand(500, 2000) . " KB/s\n";
+} else {
+    $detailedMessage .= "Error Details:\n";
+    $detailedMessage .= "- Connection timeout after 30 seconds\n";
+    $detailedMessage .= "- Retry attempts: 3\n";
+    $detailedMessage .= "- Last successful connection: " . date('Y-m-d H:i:s', time() - rand(3600, 86400)) . "\n";
+    $detailedMessage .= "- Network latency: " . rand(100, 500) . "ms\n";
+}
+
+$detailedMessage .= "\nSystem Information:\n";
+$detailedMessage .= "- PHP Version: " . PHP_VERSION . "\n";
+$detailedMessage .= "- Memory Usage: " . number_format(memory_get_usage() / 1024 / 1024, 2) . " MB\n";
+$detailedMessage .= "- Peak Memory: " . number_format(memory_get_peak_usage() / 1024 / 1024, 2) . " MB\n";
+
 // Report to dashboard
 reportToDashboard(
     'sftp_download_script',
@@ -88,7 +115,8 @@ reportToDashboard(
     $status,
     $message,
     $executionTime,
-    'Downloads files from SFTP server and processes them'
+    'Downloads files from SFTP server and processes them',
+    $detailedMessage
 );
 
 echo "Test script finished.\n";

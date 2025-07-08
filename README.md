@@ -44,7 +44,7 @@ TPGDashboard/
 ### Requirements
 
 - PHP 7.4 or higher
-- SQLite extension for PHP (usually included)
+- MySQL (usually included)
 - Web server (Apache, Nginx, or PHP built-in server)
 
 ### Setup Steps
@@ -102,8 +102,9 @@ Scripts can report their status by sending a POST request to `/api/report.php` w
 {
     "script_name": "your_script_name",
     "script_type": "script_category",
-    "status": "success|failure",
-    "message": "Detailed status message",
+    "status": "success|failure|warning|info",
+    "message": "Brief status message",
+    "detailed_message": "Comprehensive execution details with logs, errors, etc.",
     "execution_time": 45.2,
     "description": "Optional script description"
 }
@@ -111,13 +112,20 @@ Scripts can report their status by sending a POST request to `/api/report.php` w
 
 #### Required Fields
 - `script_name`: Unique identifier for your script
-- `status`: Either "success" or "failure"
+- `status`: One of "success", "failure", "warning", or "info"
 
 #### Optional Fields
 - `script_type`: Category/type of script (default: "general")
-- `message`: Detailed status or error message
+- `message`: Brief status or error message (displayed in main table)
+- `detailed_message`: Comprehensive details, logs, error traces, etc. (viewable via "View Details" button)
 - `execution_time`: Script execution time in seconds
 - `description`: Script description (used on first registration)
+
+#### Status Types
+- **success**: Script completed successfully
+- **failure**: Script failed with errors
+- **warning**: Script completed but with warnings or issues
+- **info**: Informational status (e.g., scheduled maintenance, notifications)
 
 #### Example Usage
 
@@ -156,24 +164,34 @@ curl -X POST http://your-domain.com/api/report.php \
   }'
 ```
 
-**Python Example:**
-```python
-import requests
-import json
+Invoke-WebRequest -Uri "http://localhost:8000/api/report.php" -Method POST -Headers @{"Content-Type"="application/json"} -Body '{"script_name":"detailed_test","status":"info","message":"Test with detailed info","detailed_message":"This is a very detailed message that contains:\n\n1. Multiple lines of information\n2. Technical details about the process\n3. Error logs or debug information\n4. Any other relevant data that might be too long for the main message field\n\nThis demonstrates how detailed messages can provide comprehensive information about script execution."}'
 
-data = {
-    'script_name': 'data_sync_script',
-    'script_type': 'data_processing',
-    'status': 'failure',
-    'message': 'Database connection failed',
-    'execution_time': 5.3
+
+#### Complete Request Body Reference
+
+All supported fields in the API request:
+
+| Field | Type | Required | Description | Example |
+|-------|------|----------|-------------|---------|
+| `script_name` | String | ✅ Yes | Unique identifier for your script | `"sftp_download_script"` |
+| `status` | String (ENUM) | ✅ Yes | Execution status: `success`, `failure`, `warning`, `info` | `"success"` |
+| `script_type` | String | ❌ No | Category/type of script (default: "general") | `"file_transfer"` |
+| `message` | String (TEXT) | ❌ No | Brief status message shown in main table | `"Downloaded 15 files"` |
+| `detailed_message` | String (LONGTEXT) | ❌ No | Comprehensive details, logs, errors (viewable via modal) | `"Server: sftp.example.com\nFiles: file1.csv, file2.csv"` |
+| `execution_time` | Decimal | ❌ No | Script execution time in seconds | `45.2` |
+| `description` | String (TEXT) | ❌ No | Script description (used on first registration) | `"Downloads files from SFTP server"` |
+
+**Complete Example with All Fields:**
+```json
+{
+    "script_name": "comprehensive_backup_script",
+    "script_type": "backup",
+    "status": "warning",
+    "message": "Backup completed with 2 warnings",
+    "detailed_message": "Backup Process Report:\n\nStart Time: 2024-01-15 02:00:00\nEnd Time: 2024-01-15 02:45:30\n\nFiles Processed:\n✓ database_backup.sql (2.3 GB)\n✓ uploads_backup.tar.gz (1.8 GB)\n⚠ logs_backup.tar.gz (corrupted, retried successfully)\n⚠ config_backup.zip (permission warning)\n\nStorage Locations:\n- Primary: /backups/daily/2024-01-15/\n- Mirror: s3://company-backups/daily/2024-01-15/\n\nVerification:\n✓ Checksums verified\n✓ Restore test passed\n\nWarnings:\n1. Log file had permission issues (resolved)\n2. Config backup size larger than expected\n\nNext scheduled backup: 2024-01-16 02:00:00",
+    "execution_time": 2730.5,
+    "description": "Comprehensive nightly backup system for databases, files, and configurations"
 }
-
-response = requests.post(
-    'http://your-domain.com/api/report.php',
-    headers={'Content-Type': 'application/json'},
-    data=json.dumps(data)
-)
 ```
 
 ### Testing
