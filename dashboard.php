@@ -20,28 +20,14 @@ if (isset($_GET['logout'])) {
 
 define('APP_NAME', 'TPG Dashboard');
 
-// Initialize empty data for now
-$stats = [
-    'total_scripts' => 0,
-    'total_executions' => 0,
-    'success_rate' => 0,
-    'failed_executions' => 0
-];
-$recentResults = [];
-$allScripts = [];
+// Load required files
+require_once 'includes/config.php';
+require_once 'includes/functions.php';
 
-// Try to connect to database and get real data
-try {
-    require_once 'includes/config.php';
-    require_once 'includes/functions.php';
-    
-    $stats = getScriptStatistics();
-    $recentResults = getRecentResults(10);
-    $allScripts = getAllScripts();
-} catch (Exception $e) {
-    // If database connection fails, we'll show empty dashboard
-    $dbError = $e->getMessage();
-}
+// Get dashboard data
+$stats = getScriptStatistics();
+$recentResults = getRecentResults(10);
+$allScripts = getAllScripts();
 ?>
 <!DOCTYPE html>
 <html lang="en">
