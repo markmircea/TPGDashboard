@@ -19,8 +19,8 @@ require_once '../includes/functions.php';
 try {
     // Get parameters
     $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-    $limit = 20; // Results per page
-    $offset = ($page - 1) * $limit;
+    $perPage = isset($_GET['per_page']) ? max(1, min(500, intval($_GET['per_page']))) : 25; // Default to 25, max 500
+    $offset = ($page - 1) * $perPage;
     
     $dateFrom = isset($_GET['dateFrom']) && !empty($_GET['dateFrom']) ? $_GET['dateFrom'] : null;
     $dateTo = isset($_GET['dateTo']) && !empty($_GET['dateTo']) ? $_GET['dateTo'] : null;
@@ -28,11 +28,11 @@ try {
     $status = isset($_GET['status']) && !empty($_GET['status']) ? $_GET['status'] : null;
     
     // Get filtered results
-    $results = getFilteredResults($dateFrom, $dateTo, $scriptId, $status, $limit, $offset);
+    $results = getFilteredResults($dateFrom, $dateTo, $scriptId, $status, $perPage, $offset);
     $totalCount = getFilteredResultsCount($dateFrom, $dateTo, $scriptId, $status);
     
     // Calculate pagination
-    $totalPages = ceil($totalCount / $limit);
+    $totalPages = ceil($totalCount / $perPage);
     
     echo json_encode([
         'success' => true,
@@ -41,7 +41,7 @@ try {
             'current_page' => $page,
             'total_pages' => $totalPages,
             'total_results' => $totalCount,
-            'results_per_page' => $limit
+            'results_per_page' => $perPage
         ]
     ]);
     

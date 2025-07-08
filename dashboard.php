@@ -25,7 +25,7 @@ require_once 'includes/functions.php';
 
 // Get dashboard data
 $stats = getScriptStatistics();
-$recentResults = getRecentResults(10);
+$todaysScripts = getTodaysScripts(); // Get all scripts that ran today
 $allScripts = getAllScripts();
 ?>
 <!DOCTYPE html>
@@ -73,7 +73,7 @@ $allScripts = getAllScripts();
                         <i class="fas fa-file-code"></i>
                     </div>
                 </div>
-                <div class="stat-value"><?php echo $stats['scripts_run_today']; ?></div>
+                <div class="stat-value"><?php echo isset($stats['scripts_run_today']) ? $stats['scripts_run_today'] : $stats['total_scripts']; ?></div>
                 <div class="stat-trend">
                     <i class="fas fa-calendar-day"></i>
                     Unique scripts executed
@@ -153,7 +153,7 @@ $allScripts = getAllScripts();
                     </button>
                 </div>
                 <div id="recent-results">
-                    <?php if (empty($recentResults)): ?>
+                    <?php if (empty($todaysScripts)): ?>
                         <div class="empty-state">
                             <i class="fas fa-inbox"></i>
                             <h3>No scripts ran today</h3>
@@ -164,38 +164,48 @@ $allScripts = getAllScripts();
                             <thead>
                                 <tr>
                                     <th class="sortable" data-column="script_name">
-                                        <i class="fas fa-file-alt"></i> Script Name
+                                        Script Name
                                         <i class="fas fa-sort sort-icon"></i>
                                     </th>
                                     <th class="sortable" data-column="script_type">
-                                        <i class="fas fa-tag"></i> Type
+                                        Type
                                         <i class="fas fa-sort sort-icon"></i>
                                     </th>
                                     <th class="sortable" data-column="status">
-                                        <i class="fas fa-traffic-light"></i> Status
+                                        Status
                                         <i class="fas fa-sort sort-icon"></i>
                                     </th>
                                     <th class="sortable" data-column="message">
-                                        <i class="fas fa-comment"></i> Message
+                                        Message
                                         <i class="fas fa-sort sort-icon"></i>
                                     </th>
                                     <th class="sortable" data-column="execution_time">
-                                        <i class="fas fa-stopwatch"></i> Execution Time
+                                        Execution Time
                                         <i class="fas fa-sort sort-icon"></i>
                                     </th>
                                     <th class="sortable" data-column="reported_at">
-                                        <i class="fas fa-clock"></i> Reported At
+                                        Reported At
                                         <i class="fas fa-sort sort-icon"></i>
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($recentResults as $result): ?>
+                                <?php foreach ($todaysScripts as $script): ?>
                                     <tr>
-                                        <td><?php echo escape($result['script_name']); ?></td>
-                                        <td><?php echo escape($result['script_type']); ?></td>
                                         <td>
-                                            <span class="status-badge <?php echo $result['status']; ?>">
+                                            <div class="script-name-with-count">
+                                                <a href="#" class="script-name-link" onclick="filterHistoryByScript('<?php echo escape($script['script_name']); ?>', event)">
+                                                    <?php echo escape($script['script_name']); ?>
+                                                </a>
+                                                <span class="run-count-tooltip" title="Executed <?php echo $script['total_runs_today']; ?> time(s) today - Click to view history" onclick="filterHistoryByScript('<?php echo escape($script['script_name']); ?>', event)">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    <span class="run-count-badge"><?php echo $script['total_runs_today']; ?></span>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td><?php echo escape($script['script_type']); ?></td>
+                                        <td>
+                                            <span class="status-badge <?php echo $script['last_status']; ?>">
                                                 <?php 
                                                 $statusIcons = [
                                                     'success' => 'fas fa-check',
@@ -204,21 +214,21 @@ $allScripts = getAllScripts();
                                                     'info' => 'fas fa-info'
                                                 ];
                                                 ?>
-                                                <i class="<?php echo $statusIcons[$result['status']] ?? 'fas fa-question'; ?>"></i>
-                                                <?php echo escape($result['status']); ?>
+                                                <i class="<?php echo $statusIcons[$script['last_status']] ?? 'fas fa-question'; ?>"></i>
+                                                <?php echo escape($script['last_status']); ?>
                                             </span>
                                         </td>
                                         <td>
-                                            <?php echo escape($result['message']); ?>
-                                            <?php if (!empty($result['detailed_message'])): ?>
-                                                <br><button class="btn btn-sm btn-secondary" data-detailed-message="<?php echo htmlspecialchars($result['detailed_message'], ENT_QUOTES, 'UTF-8'); ?>" onclick="showDetailedMessageFromButton(this)">
+                                            <?php echo escape($script['last_message'] ?? 'No message'); ?>
+                                            <?php if (!empty($script['last_detailed_message'])): ?>
+                                                <br><button class="btn btn-sm btn-secondary" data-detailed-message="<?php echo htmlspecialchars($script['last_detailed_message'], ENT_QUOTES, 'UTF-8'); ?>" onclick="showDetailedMessageFromButton(this)">
                                                     <i class="fas fa-eye"></i>
                                                     View Details
                                                 </button>
                                             <?php endif; ?>
                                         </td>
-                                        <td><?php echo formatExecutionTime($result['execution_time']); ?></td>
-                                        <td><?php echo formatDate($result['reported_at']); ?></td>
+                                        <td><?php echo formatExecutionTime($script['last_execution_time']); ?></td>
+                                        <td><?php echo formatDate($script['last_execution']); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -248,31 +258,31 @@ $allScripts = getAllScripts();
                         <thead>
                             <tr>
                                 <th class="sortable" data-column="script_name">
-                                    <i class="fas fa-file-alt"></i> Script Name
+                                    Script Name
                                     <i class="fas fa-sort sort-icon"></i>
                                 </th>
                                 <th class="sortable" data-column="script_type">
-                                    <i class="fas fa-tag"></i> Type
+                                    Type
                                     <i class="fas fa-sort sort-icon"></i>
                                 </th>
                                 <th class="sortable" data-column="total_executions">
-                                    <i class="fas fa-play"></i> Total Executions
+                                    Total Executions
                                     <i class="fas fa-sort sort-icon"></i>
                                 </th>
                                 <th class="sortable" data-column="successful_executions">
-                                    <i class="fas fa-check"></i> Successful
+                                    Successful
                                     <i class="fas fa-sort sort-icon"></i>
                                 </th>
                                 <th class="sortable" data-column="success_rate">
-                                    <i class="fas fa-percentage"></i> Success Rate
+                                    Success Rate
                                     <i class="fas fa-sort sort-icon"></i>
                                 </th>
                                 <th class="sortable" data-column="last_execution">
-                                    <i class="fas fa-clock"></i> Last Execution
+                                    Last Execution
                                     <i class="fas fa-sort sort-icon"></i>
                                 </th>
                                 <th class="sortable" data-column="created_at">
-                                    <i class="fas fa-calendar-plus"></i> Created
+                                    Created
                                     <i class="fas fa-sort sort-icon"></i>
                                 </th>
                             </tr>
@@ -385,15 +395,15 @@ $allScripts = getAllScripts();
                 </div>
                 
                 <!-- Enhanced Pagination -->
-                <div id="pagination" class="pagination-container" style="display: none;">
+                <div id="pagination-container" class="pagination-container" style="display: none;">
                     <div class="pagination-info">
                         <span id="pagination-text">Showing 0 - 0 of 0 results</span>
                     </div>
-                    <div id="pagination" class="pagination"></div>
+                    <div id="pagination-buttons" class="pagination"></div>
                     <div class="pagination-controls">
                         <select id="per-page-select" class="form-control">
-                            <option value="25">25 per page</option>
-                            <option value="50" selected>50 per page</option>
+                            <option value="25" selected>25 per page</option>
+                            <option value="50">50 per page</option>
                             <option value="100">100 per page</option>
                             <option value="250">250 per page</option>
                         </select>

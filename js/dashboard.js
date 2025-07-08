@@ -1,7 +1,7 @@
 // Dashboard JavaScript functionality
 let currentPage = 1;
 let currentFilters = {};
-let currentPerPage = 50;
+let currentPerPage = 25;
 let totalResults = 0;
 let totalPages = 0;
 
@@ -56,27 +56,27 @@ function updateHistoryResults(results) {
             <thead>
                 <tr>
                     <th class="sortable" data-column="script_name">
-                        <i class="fas fa-file-alt"></i> Script Name
+                        Script Name
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
                     <th class="sortable" data-column="script_type">
-                        <i class="fas fa-tag"></i> Type
+                        Type
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
                     <th class="sortable" data-column="status">
-                        <i class="fas fa-traffic-light"></i> Status
+                        Status
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
                     <th class="sortable" data-column="message">
-                        <i class="fas fa-comment"></i> Message
+                        Message
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
                     <th class="sortable" data-column="execution_time">
-                        <i class="fas fa-stopwatch"></i> Execution Time
+                        Execution Time
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
                     <th class="sortable" data-column="reported_at">
-                        <i class="fas fa-clock"></i> Reported At
+                        Reported At
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
                 </tr>
@@ -127,8 +127,8 @@ function updateRecentResults(results) {
 
 // Enhanced pagination update function
 function updateEnhancedPagination(pagination) {
-    const container = document.querySelector('.pagination-container');
-    const paginationDiv = document.querySelector('.pagination');
+    const container = document.getElementById('pagination-container');
+    const paginationDiv = document.getElementById('pagination-buttons');
     const paginationText = document.getElementById('pagination-text');
     
     if (pagination.total_pages <= 1) {
@@ -373,6 +373,78 @@ function isDate(value) {
     return !isNaN(Date.parse(value));
 }
 
+// Apply filters for history
+function applyFilters() {
+    currentPage = 1;
+    currentFilters = {
+        dateFrom: document.getElementById('date-from').value,
+        dateTo: document.getElementById('date-to').value,
+        scriptId: document.getElementById('script-filter').value,
+        status: document.getElementById('status-filter').value
+    };
+    
+    loadHistoryData();
+}
+
+// Load history data with filters and pagination
+function loadHistoryData(page = 1) {
+    currentPage = page;
+    
+    const params = new URLSearchParams({
+        page: page,
+        per_page: currentPerPage,
+        ...currentFilters
+    });
+    
+    // Show loading spinner
+    document.getElementById('history-results').innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 1rem; color: var(--medium-gray);">
+                <i class="fas fa-search"></i> Loading historical data...
+            </p>
+        </div>
+    `;
+    
+    fetch(`api/get-history.php?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                totalResults = data.pagination.total_results;
+                totalPages = data.pagination.total_pages;
+                updateHistoryResults(data.results);
+                updateEnhancedPagination(data.pagination);
+            } else {
+                showError('Failed to load history data: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading history:', error);
+            showError('Failed to load history data');
+        });
+}
+
+// Export results to CSV
+function exportResults() {
+    const params = new URLSearchParams({
+        export: 'csv',
+        ...currentFilters
+    });
+    
+    window.open(`api/export.php?${params}`, '_blank');
+}
+
+// Utility functions
+function formatDateForInput(date) {
+    return date.toISOString().split('T')[0];
+}
+
+function showError(message) {
+    // You can implement a toast notification system here
+    console.error(message);
+    alert(message); // Simple fallback
+}
+
 // Enhanced keyboard shortcuts
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', function(event) {
@@ -433,6 +505,59 @@ function showSection(sectionName) {
     if (sectionName === 'history') {
         loadHistoryData();
     }
+}
+
+// Filter history by script name and switch to history tab
+function filterHistoryByScript(scriptName, event) {
+    event.preventDefault();
+    
+    // Switch to history tab
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+    });
+    
+    // Activate history tab
+    const historyTab = document.querySelector('[onclick="showSection(\'history\')"]');
+    if (historyTab) {
+        historyTab.classList.add('active');
+    }
+    
+    // Show history section
+    const historySection = document.getElementById('history');
+    if (historySection) {
+        setTimeout(() => {
+            historySection.classList.add('active');
+            historySection.style.opacity = '1';
+            historySection.style.transform = 'translateY(0)';
+            historySection.style.transition = 'all 0.3s ease';
+        }, 50);
+    }
+    
+    // Set today's date filters
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date-from').value = today;
+    document.getElementById('date-to').value = today;
+    
+    // Find the script in the dropdown and select it
+    const scriptSelect = document.getElementById('script-filter');
+    const options = scriptSelect.options;
+    for (let i = 0; i < options.length; i++) {
+        if (options[i].text === scriptName) {
+            scriptSelect.selectedIndex = i;
+            break;
+        }
+    }
+    
+    // Apply the filters
+    setTimeout(() => {
+        applyFilters();
+    }, 100);
 }
 
 // Enhanced refresh function with better feedback
@@ -540,20 +665,20 @@ function updateTodaysScripts(results) {
                         <i class="fas fa-tag"></i> Type
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
-                    <th class="sortable" data-column="total_runs_today">
-                        <i class="fas fa-play"></i> Runs Today
+                    <th class="sortable" data-column="status">
+                        <i class="fas fa-traffic-light"></i> Status
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
-                    <th class="sortable" data-column="last_status">
-                        <i class="fas fa-traffic-light"></i> Last Status
+                    <th class="sortable" data-column="message">
+                        <i class="fas fa-comment"></i> Message
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
-                    <th class="sortable" data-column="success_rate_today">
-                        <i class="fas fa-percentage"></i> Success Rate Today
+                    <th class="sortable" data-column="execution_time">
+                        <i class="fas fa-stopwatch"></i> Execution Time
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
-                    <th class="sortable" data-column="last_execution">
-                        <i class="fas fa-clock"></i> Last Execution
+                    <th class="sortable" data-column="reported_at">
+                        <i class="fas fa-clock"></i> Reported At
                         <i class="fas fa-sort sort-icon"></i>
                     </th>
                 </tr>
@@ -571,14 +696,18 @@ function updateTodaysScripts(results) {
         
         html += `
             <tr>
-                <td>${escapeHtml(result.script_name)}</td>
-                <td>${escapeHtml(result.script_type)}</td>
                 <td>
-                    <span class="badge badge-info">
-                        <i class="fas fa-play"></i>
-                        ${result.total_runs_today}
-                    </span>
+                    <div class="script-name-with-count">
+                        <a href="#" class="script-name-link" onclick="filterHistoryByScript('${escapeHtml(result.script_name)}', event)">
+                            ${escapeHtml(result.script_name)}
+                        </a>
+                        <span class="run-count-tooltip" title="Executed ${result.total_runs_today} time(s) today - Click to view history" onclick="filterHistoryByScript('${escapeHtml(result.script_name)}', event)">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="run-count-badge">${result.total_runs_today}</span>
+                        </span>
+                    </div>
                 </td>
+                <td>${escapeHtml(result.script_type)}</td>
                 <td>
                     <span class="status-badge ${result.last_status}">
                         <i class="${statusIcons[result.last_status] || 'fas fa-question'}"></i>
@@ -586,11 +715,10 @@ function updateTodaysScripts(results) {
                     </span>
                 </td>
                 <td>
-                    <span class="status-badge ${result.success_rate_today >= 90 ? 'success' : (result.success_rate_today >= 70 ? 'warning' : 'danger')}">
-                        <i class="fas fa-chart-line"></i>
-                        ${result.success_rate_today}%
-                    </span>
+                    ${escapeHtml(result.last_message || 'No message')}
+                    ${result.last_detailed_message ? `<br><button class="btn btn-sm btn-secondary" data-detailed-message="${escapeHtml(result.last_detailed_message)}" onclick="showDetailedMessageFromButton(this)"><i class="fas fa-eye"></i> View Details</button>` : ''}
                 </td>
+                <td>${formatExecutionTime(result.last_execution_time)}</td>
                 <td>${formatDate(result.last_execution)}</td>
             </tr>
         `;
@@ -672,6 +800,7 @@ function updateHistoryResults(results) {
     if (results.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
+                <i class="fas fa-search"></i>
                 <h3>No results found</h3>
                 <p>Try adjusting your filters to see more results.</p>
             </div>
@@ -680,33 +809,59 @@ function updateHistoryResults(results) {
     }
     
     let html = `
-        <table class="table">
+        <table class="table sortable-table">
             <thead>
                 <tr>
-                    <th>Script Name</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Message</th>
-                    <th>Execution Time</th>
-                    <th>Reported At</th>
+                    <th class="sortable" data-column="script_name">
+                        Script Name
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="script_type">
+                        Type
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="status">
+                        Status
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="message">
+                        Message
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="execution_time">
+                        Execution Time
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" data-column="reported_at">
+                        Reported At
+                        <i class="fas fa-sort sort-icon"></i>
+                    </th>
                 </tr>
             </thead>
             <tbody>
     `;
     
     results.forEach(result => {
+        const statusIcons = {
+            'success': 'fas fa-check',
+            'failure': 'fas fa-times', 
+            'warning': 'fas fa-exclamation',
+            'info': 'fas fa-info'
+        };
+        
         html += `
             <tr>
                 <td>${escapeHtml(result.script_name)}</td>
                 <td>${escapeHtml(result.script_type)}</td>
                 <td>
                     <span class="status-badge ${result.status}">
+                        <i class="${statusIcons[result.status] || 'fas fa-question'}"></i>
                         ${escapeHtml(result.status)}
                     </span>
                 </td>
                 <td>
                     ${escapeHtml(result.message)}
-                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" data-detailed-message="${escapeHtml(result.detailed_message)}" onclick="showDetailedMessageFromButton(this)">View Details</button>` : ''}
+                    ${result.detailed_message ? `<br><button class="btn btn-sm btn-secondary" data-detailed-message="${escapeHtml(result.detailed_message)}" onclick="showDetailedMessageFromButton(this)"><i class="fas fa-eye"></i> View Details</button>` : ''}
                 </td>
                 <td>${formatExecutionTime(result.execution_time)}</td>
                 <td>${formatDate(result.reported_at)}</td>
@@ -716,6 +871,9 @@ function updateHistoryResults(results) {
     
     html += '</tbody></table>';
     container.innerHTML = html;
+    
+    // Re-initialize sorting for the new table
+    initializeSortableTables();
 }
 
 // Update pagination controls

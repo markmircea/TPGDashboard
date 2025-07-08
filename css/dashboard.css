@@ -458,6 +458,108 @@
     border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
+/* Script name with run count tooltip */
+.script-name-with-count {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.run-count-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: help;
+}
+
+.run-count-tooltip i {
+    color: var(--info-color);
+    font-size: 0.8rem;
+    opacity: 0.7;
+    transition: var(--transition);
+}
+
+.run-count-tooltip:hover i {
+    opacity: 1;
+}
+
+.run-count-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--info-color);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.15rem 0.35rem;
+    border-radius: 10px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    line-height: 1;
+}
+
+/* Tooltip styling */
+.run-count-tooltip::before {
+    content: attr(title);
+    position: absolute;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--dark-gray);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.run-count-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--dark-gray);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+    z-index: 1000;
+}
+
+.run-count-tooltip:hover::before,
+.run-count-tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Script name link styling */
+.script-name-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.script-name-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.run-count-tooltip {
+    cursor: pointer;
+}
+
 /* Enhanced Filters */
 .filters {
     background: white;

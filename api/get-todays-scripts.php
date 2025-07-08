@@ -17,8 +17,8 @@ require_once '../includes/config.php';
 require_once '../includes/functions.php';
 
 try {
-    $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
-    $results = getRecentResults($limit);
+    // Get today's scripts
+    $results = getTodaysScripts();
     
     echo json_encode([
         'success' => true,
