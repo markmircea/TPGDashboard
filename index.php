@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please enter both username and password.';
     } else {
         // Simple hardcoded login check
-        if ($username === 'admin' && $password === 'tpgdashboard!!11') {
+        if ($username === 'admin' && $password === 'admin123') {
             $_SESSION['user_id'] = 1;
             $_SESSION['username'] = $username;
             $_SESSION['login_time'] = time();
@@ -77,7 +77,11 @@ define('APP_NAME', 'TPG Dashboard');
                 <button type="submit" class="btn btn-primary">Login</button>
             </form>
             
-
+            <div class="login-info">
+                <p><strong>Default Credentials:</strong></p>
+                <p>Username: admin</p>
+                <p>Password: admin123</p>
+            </div>
         </div>
     </div>
 </body>
