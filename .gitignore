@@ -30,3 +30,5 @@ Homestead.json
 auth.json
 setup-database.php
 includes/config.php
+includes/config.php
+setup-database.php
