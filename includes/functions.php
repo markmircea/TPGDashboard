@@ -269,7 +269,7 @@ function getTodaysScripts() {
         INNER JOIN script_results sr ON s.id = sr.script_id
         WHERE DATE(sr.reported_at) = ?
         GROUP BY s.id, s.script_name, s.script_type
-        ORDER BY total_runs_today DESC, s.script_name
+        ORDER BY last_execution DESC, total_runs_today DESC, s.script_name
     ");
     
     $stmt->execute([$today, $today, $today, $today, $today, $today]);
